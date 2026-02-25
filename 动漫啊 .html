@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>次元百宝箱 - 极智动漫导航</title>
+    <meta name="description" content="最全二次元动漫导航，离线追番、本地工具箱。">
+    <meta name="keywords" content="动漫导航,二次元,樱花动漫">
+
+    <!-- 提前打通网络通道，极速加载 -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    <link rel="preconnect" href="https://api.dicebear.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
+
+        /* 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+        【傻瓜式进阶教程 1：如何让你的背景图 1 秒打开？(图床与压缩秘籍)】
+        
+        为什么以前加载慢？因为一张 4K 原图动辄 5MB~10MB，网速慢的手机根本打不开！
+        为了实现“秒开”，你每次换图片必须按照以下【三步走】：
+
+        👉 第一步：找图与裁切
+           背景图最好找横屏的（比例 16:9，分辨率 1920x1080 足够了，千万别用 4K/8K 原图，肉眼看不出区别只会卡死）。
+
+        👉 第二步：神器压缩（必须做！）
+           打开免费熊猫压缩网站：https://tinypng.com/
+           把你找的图片拖进去，它会无损把 5MB 的图压成 300KB！画质完全不变！
+
+        👉 第三步：上传图床（获取极速链接）
+           不要把大图片直接放在 GitHub 里（GitHub 国内访问图片有时会抽风）。
+           打开国内极速免费图床，比如【路过图床 (imgse.com)】或【聚合图床 (superbed.cc)】。
+           把压缩好的图片传上去，复制它给你的“直接链接 (URL)”。
+           
+        👉 第四步：替换下面的链接
+           把你复制的链接，粘贴到下面的 url('') 单引号里面！
+        🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+        */
+        :root {
+            /* 把下方链接换成你按照上面教程压缩并上传图床后得到的链接 */
+            --bg-image: url('https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=1920&auto=format&fit=crop');
+            --primary-color: #f472b6;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: #ffffff; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .bg-container {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-image) no-repeat center center;
+            background-size: cover; 
+            z-index: -2;
+            transform: translateZ(0); 
+        }
+
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.15); 
+            z-index: -1;
+        }
+
+        .glass-panel {
+            background: rgba(20, 25, 35, 0.25); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-inner {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 1rem;
+        }
+
+        .scroll-hide::-webkit-scrollbar { width: 0; height: 0; }
+        .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .nav-active {
+            background: linear-gradient(90deg, rgba(244, 114, 182, 0.5), rgba(0,0,0,0));
+            border-left: 4px solid var(--primary-color); color: #fff;
+        }
+
+        .cat-btn.active {
+            background: var(--primary-color); color: #fff;
+            box-shadow: 0 4px 15px rgba(244, 114, 182, 0.6); border-color: transparent; text-shadow: none;
+        }
+
+        @keyframes floatAd { 
+            0%, 100% { transform: translateY(0); box-shadow: 0 10px 25px rgba(0,0,0,0.5); } 
+            50% { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(244, 114, 182, 0.6); } 
+        }
+        .ad-float { animation: floatAd 3s ease-in-out infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .playing .record { animation: spin 4s linear infinite; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen">
+
+    <!-- 背景层 -->
+    <div class="bg-container"></div>
+    <div class="bg-overlay"></div>
+
+    <aside class="hidden lg:flex flex-col w-64 glass-panel h-full relative z-20 border-r border-white/20 shrink-0">
+        <div class="p-6 flex items-center space-x-3 border-b border-white/20">
+            <span class="text-3xl drop-shadow-md">✨</span>
+            <span class="font-black text-xl italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-white text-shadow-none">次元百宝箱</span>
+        </div>
+
+        <div class="px-5 py-4 border-b border-white/20">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-bold text-pink-300" id="welcome-text">晚上好~</span>
+                <span class="text-[10px] bg-black/40 px-2 py-1 rounded-full font-bold border border-white/20" id="streak-days">连签 0 天</span>
+            </div>
+            <button id="pc-checkin" onclick="handleCheckIn()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-80 rounded-xl text-sm font-black shadow-lg transition text-shadow-none">
+                📝 每日签到打卡
+            </button>
+        </div>
+
+        <nav class="flex-grow py-4 space-y-3 px-4 overflow-y-auto scroll-hide">
+            <button onclick="switchView('nav')" class="menu-btn nav-active w-full flex items-center space-x-4 px-4 py-3.5 rounded-2xl text-base font-bold transition hover:bg-white/20 text-white">
+                <span class="text-2xl drop-shadow-md">🧭</span> <span>导航大厅</span>
+            </button>
+            <button onclick="switchView('tracking')" class="menu-btn w-full flex items-center space-x-4 px-4 py-3.5 rounded-2xl text-base font-bold transition hover:bg-white/20 text-gray-200">
+                <span class="text-2xl drop-shadow-md">📅</span> <span>追番日历</span>
+            </button>
+            <button onclick="switchView('tools')" class="menu-btn w-full flex items-center space-x-4 px-4 py-3.5 rounded-2xl text-base font-bold transition hover:bg-white/20 text-gray-200">
+                <span class="text-2xl drop-shadow-md">🧰</span> <span>离线工具</span>
+            </button>
+            <div class="my-4 border-t border-white/20 w-full"></div>
+            <button onclick="switchView('welfare')" class="menu-btn w-full flex items-center space-x-4 px-4 py-3.5 rounded-2xl text-base font-bold transition bg-pink-500/30 hover:bg-pink-500/60 border border-pink-400/50 text-white group shadow-lg">
+                <span class="text-2xl group-hover:scale-110 transition drop-shadow-md">🎁</span> <span>好物 · 交流</span>
+            </button>
+        </nav>
+
+        <div class="p-5 border-t border-white/20">
+            <div id="music-player" class="glass-inner p-3 flex items-center space-x-3 cursor-pointer transition hover:bg-white/30" onclick="toggleMusic()">
+                <div class="record w-12 h-12 rounded-full bg-black border-[2px] border-gray-600 flex items-center justify-center shrink-0 shadow-xl relative">
+                    <div class="w-3 h-3 bg-pink-400 rounded-full"></div>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold truncate text-pink-300 drop-shadow-md">🎵 专属背景音乐</p>
+                    <p class="text-[10px] text-gray-200 truncate mt-1" id="music-status">点击播放 / 暂停</p>
+                </div>
+                <!-- 音乐文件建议压缩成 mp3，大小在 2MB 以内，可以直接丢在 github 里，写 src="./music.mp3" -->
+                <audio id="bg-audio" loop preload="none">
+                    <source src="https://cdn.jsdelivr.net/gh/xxx/xxx/luodalianren.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+        </div>
+    </aside>
+
+    <header class="lg:hidden glass-panel px-4 py-3 flex justify-between items-center sticky top-0 z-30 border-b border-white/20">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl drop-shadow-md">✨</span>
+            <span class="font-black text-lg italic text-pink-300 text-shadow-none">次元百宝箱</span>
+        </div>
+        <button onclick="toggleMusic()" class="w-10 h-10 rounded-full bg-black/60 border border-white/40 flex items-center justify-center text-sm record shadow-xl" id="mobile-record">🎵</button>
+    </header>
+
+    <main class="flex-grow relative h-[calc(100vh-60px)] lg:h-screen overflow-y-auto scroll-hide pb-28 lg:pb-0">
+        <div class="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto">
+            
+            <section id="view-nav" class="view-content block animate-[fadeIn_0.3s_ease]">
+                <div class="text-center mb-6 pt-2 flex flex-col items-center">
+                    <div class="glass-inner px-6 py-4 md:px-8 md:py-5 mb-4 inline-block max-w-2xl border-white/30 shadow-2xl">
+                        <p id="slogan-jp" class="font-bold text-sm md:text-xl text-white mb-2 tracking-wider">ロード中...</p>
+                        <p id="slogan-cn" class="text-xs md:text-base text-pink-300 font-bold">正在离线读取台词数据...</p>
+                    </div>
+                </div>
+
+                <div class="mb-8 flex flex-col items-center">
+                    <div class="glass-panel p-2 md:p-3 rounded-[2rem] flex items-center mb-6 w-full max-w-3xl shadow-2xl border border-white/30 focus-within:border-pink-400 transition">
+                        <span class="pl-4 md:pl-6 text-xl opacity-90 drop-shadow-md">🔍</span>
+                        <input type="text" id="searchInput" placeholder="搜索动漫、网址或简介..." class="w-full bg-transparent px-3 py-2 md:px-4 md:py-3 outline-none font-bold text-white placeholder-gray-200 text-base md:text-lg text-shadow-none">
+                    </div>
+                    
+                    <!-- 
+                    🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+                    【傻瓜式进阶教程 2：首页黄金横幅广告图片规范】
+                    
+                    👉 尺寸规范：这里的图片是个正方形缩略图。
+                       建议你自己做图的时候，做成 600x600 像素的正方形。
+                       不要传长方形的图，会被自动裁剪中间部分。
+                    
+                    👉 体积规范：必须！必须！丢到 tinypng.com 压缩！
+                       这张图绝对不能超过 100KB！压缩完后上传图床，把链接贴到下面的 src="" 里。
+                       
+                    👉 a标签的 href="" 里贴上你的淘宝客/京东联盟赚钱长链接。
+                    🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+                    -->
+                    <a href="https://u.jd.com/lrVxmGp" target="_blank" class="ad-float glass-inner w-full max-w-3xl p-3 md:p-4 flex items-center space-x-4 border border-pink-400/80 hover:bg-black/50 transition mb-8 cursor-pointer relative overflow-hidden bg-black/40">
+                        <img loading="lazy" src="https://s41.ax1x.com/2026/02/25/pZxdB8I.jpg" class="w-16 h-16 md:w-20 md:h-20 rounded-xl object-cover border border-pink-400/80 shrink-0 shadow-lg">
+                        <div class="flex-grow z-10">
+                            <span class="bg-pink-500 text-white text-[10px] md:text-xs font-black px-2 py-0.5 rounded mb-1.5 inline-block shadow-md text-shadow-none">站长吐血推荐</span>
+                            <h4 class="font-bold text-sm md:text-lg truncate text-white">【直冲】115网盘8年会员+40T永久空间</h4>
+                            <p class="text-xs md:text-sm text-yellow-300 mt-1 font-bold animate-pulse">👉 点击立刻抢内部隐藏大额优惠券！</p>
+                        </div>
+                    </a>
+
+                    <div id="category-filters" class="flex flex-wrap justify-center gap-2 md:gap-3 max-w-4xl"></div>
+                </div>
+
+                <div id="nav-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"></div>
+            </section>
+
+            <!-- 视图 2：新番追更 -->
+            <section id="view-tracking" class="view-content hidden animate-[fadeIn_0.3s_ease]">
+                <h2 class="text-3xl md:text-4xl font-black italic mb-6 border-b border-white/30 pb-4 text-pink-300 drop-shadow-lg">⭐ 我的追番时间线</h2>
+                <div class="glass-panel p-6 md:p-8 rounded-[2rem] shadow-2xl border border-white/20">
+                    <p class="text-xs md:text-sm text-white mb-6 font-bold tracking-widest bg-black/50 inline-block px-4 py-2 rounded-xl border border-white/20">✅ 完全离线：数据将永久保存在您的当前设备中，断网可用！</p>
+                    <div class="flex flex-col md:flex-row gap-3 mb-8">
+                        <input type="text" id="new-anime-input" placeholder="输入番剧名，如：鬼灭之刃..." class="flex-grow glass-inner px-5 py-4 outline-none focus:border-pink-400 transition font-bold placeholder-gray-300 text-white text-shadow-none text-base md:text-lg">
+                        <button onclick="addAnime()" class="bg-pink-600 hover:bg-pink-500 border border-pink-400/50 px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg shrink-0 text-shadow-none">添加到清单</button>
+                    </div>
+                    <div id="my-anime-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+                </div>
+            </section>
+
+            <!-- 视图 3：百宝箱工具 -->
+            <section id="view-tools" class="view-content hidden animate-[fadeIn_0.3s_ease]">
+                <h2 class="text-3xl md:text-4xl font-black italic mb-6 border-b border-white/30 pb-4 text-pink-300 drop-shadow-lg">🧰 离线百宝箱</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                    
+                    <div class="glass-panel p-6 md:p-8 rounded-[2rem] shadow-2xl border border-white/20">
+                        <div class="flex items-center space-x-3 mb-4"><span class="text-4xl drop-shadow-md">✨</span><h3 class="font-bold text-2xl">二次元颜文字字典</h3></div>
+                        <p class="text-sm text-gray-200 mb-6 font-bold">100% 离线可用！点击即可一键复制到剪贴板。</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4" id="kaomoji-grid"></div>
+                    </div>
+
+                    <div class="glass-panel p-6 md:p-8 rounded-[2rem] shadow-2xl flex flex-col border border-white/20">
+                        <div class="flex items-center space-x-3 mb-4"><span class="text-4xl drop-shadow-md">📖</span><h3 class="font-bold text-2xl">追番备忘录 / 密码本</h3></div>
+                        <p class="text-sm text-gray-200 mb-6 font-bold">100% 离线保存！可以记下密码或待办事项。</p>
+                        <textarea id="local-diary" class="w-full flex-grow min-h-[200px] glass-inner p-5 outline-none text-base font-bold placeholder-gray-300 text-white resize-none text-shadow-none border border-white/20 shadow-inner" placeholder="在这里写下你的日记或备忘录... (输入内容会自动在设备断网保存)"></textarea>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 视图 4：福利 · 赞助 -->
+            <section id="view-welfare" class="view-content hidden animate-[fadeIn_0.3s_ease]">
+                <div class="text-center mb-8 pt-4">
+                    <h1 class="text-4xl md:text-6xl font-black italic tracking-tighter drop-shadow-2xl mb-3 text-pink-400">WELFARE ZONE</h1>
+                    <p class="text-white text-sm md:text-base tracking-[0.3em] font-bold">好物推荐 · 加入社群 · 赞助打赏</p>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
+                    <div class="xl:col-span-2 space-y-6 md:space-y-8">
+                        <div class="glass-panel p-6 md:p-8 rounded-[2rem] shadow-2xl bg-black/40 border border-white/20">
+                            <h3 class="text-2xl md:text-3xl font-black mb-6 flex items-center border-b border-white/20 pb-4">
+                                <span class="text-3xl mr-3 drop-shadow-md">🛍️</span> 站长良心好物分享
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                                <!-- 
+                                🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+                                【傻瓜式进阶教程 3：营销卡片图片规范】
+                                
+                                👉 尺寸规范：这里的图片比例大概是 16:9 宽屏。
+                                   建议你做图裁切成 800宽 x 450高 的长方形图片。
+                                
+                                👉 同样，压缩到 100KB 以内，上传图床，替换 src=""！
+                                   不要传好几 MB 的原图，这里是卡片，缩略图即可。
+                                🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+                                -->
+                                <a href="https://u.jd.com/lgVlhLL" target="_blank" class="glass-inner p-4 md:p-5 rounded-2xl hover:bg-white/20 transition group flex flex-col relative overflow-hidden border border-white/30">
+                                    <div class="relative rounded-xl overflow-hidden mb-4 border border-white/20 shadow-lg">
+                                        <img loading="lazy" src="https://s41.ax1x.com/2026/02/25/pZxwpM6.jpg" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
+                                        <span class="absolute top-2 left-2 bg-pink-500 text-white text-xs font-black px-3 py-1 rounded shadow-md text-shadow-none">超高性价比</span>
+                                    </div>
+                                    <h4 class="font-bold text-base mb-2 truncate text-white">HKDA初音未来:5周年纪念版</h4>
+                                    <div class="mt-auto flex justify-between items-center">
+                                        <span class="text-pink-400 font-black text-2xl drop-shadow-md">￥273 <span class="text-xs text-gray-300 line-through font-normal">￥399</span></span>
+                                        <span class="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs px-5 py-2 rounded-xl font-bold shadow-md text-shadow-none">去领券 ></span>
+                                    </div>
+                                </a>
+
+                                <a href="https://u.jd.com/l6XKZCF" target="_blank" class="glass-inner p-4 md:p-5 rounded-2xl hover:bg-white/20 transition group flex flex-col relative overflow-hidden border border-white/30">
+                                    <div class="relative rounded-xl overflow-hidden mb-4 border border-white/20 shadow-lg">
+                                        <img loading="lazy" src="https://s41.ax1x.com/2026/02/26/pZxwZRI.jpg" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
+                                        <span class="absolute top-2 left-2 bg-blue-500 text-white text-xs font-black px-3 py-1 rounded shadow-md text-shadow-none">店长力推</span>
+                                    </div>
+                                    <h4 class="font-bold text-base mb-2 truncate text-white">圣路易斯手办~可拆版~碧蓝航线圣姨美少女</h4>
+                                    <div class="mt-auto flex justify-between items-center">
+                                        <span class="text-pink-400 font-black text-2xl drop-shadow-md">￥38 <span class="text-xs text-gray-300 line-through font-normal">￥59</span></span>
+                                        <span class="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs px-5 py-2 rounded-xl font-bold shadow-md text-shadow-none">去领券 ></span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-[2rem] text-sm text-gray-100 leading-relaxed shadow-lg bg-black/50 border border-white/20 font-bold">
+                            <h4 class="font-black text-base mb-2 text-pink-300">⚠️ 本站免责声明</h4>
+                            <p>本导航页为非盈利、公益用途，仅用于个人学习、交流、测试使用，严禁任何单位或个人将其用于商业用途、非法用途或侵权行为。</p>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：微信与赞助 -->
+                    <div class="space-y-6 md:space-y-8">
+                        <div class="glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col items-center text-center shadow-2xl bg-black/40 border-t-4 border-t-blue-500 border-white/20">
+                            <h3 class="text-2xl font-black mb-2 drop-shadow-md">💬 加入次元总群</h3>
+                            <p class="text-xs text-gray-200 mb-6 font-bold">防走失发布页、求番找源</p>
+                            
+                            <!-- 
+                            🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+                            【傻瓜式进阶教程 4：微信群/收款二维码规范】
+                            
+                            👉 尺寸：把你微信保存下来的二维码，用截图工具裁成 1:1 的纯正方形（比如 400x400）。
+                            👉 压缩：二维码颜色单一，用 tinypng.com 压缩后通常只有 20KB！加载极快！
+                            👉 替换：传到图床后，把图床链接替换掉下面 src="" 里的链接。
+                            🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+                            -->
+                            <div class="w-40 h-40 bg-white p-3 rounded-2xl shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] mb-6">
+                                <img loading="lazy" src="https://s41.ax1x.com/2026/02/26/pZxwIFH.jpg" class="w-full h-full object-contain">
+                            </div>
+                            <p class="text-xs font-bold bg-black/80 px-4 py-2 rounded-full border border-white/30 shadow-lg">二维码过期加V：<span class="text-pink-400 text-shadow-none text-base ml-1">Haa_9909</span></p>
+                        </div>
+
+                        <div class="glass-panel p-6 md:p-8 rounded-[2rem] flex flex-col items-center text-center shadow-2xl bg-black/40 border-t-4 border-t-yellow-400 border-white/20">
+                            <h3 class="text-2xl font-black mb-2 drop-shadow-md">☕ 赞助服务器</h3>
+                            <p class="text-xs text-gray-200 mb-6 font-bold">感谢大佬投喂的冰可乐</p>
+                            
+                            <div class="w-40 h-40 bg-white p-3 rounded-2xl shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] mb-4">
+                                <!-- 同样把这里的 src 替换成你压缩后的支付宝/微信收款二维码链接 -->
+                                <img loading="lazy" src="https://s41.ax1x.com/2026/02/26/pZxwROK.jpg" class="w-full h-full object-contain">
+                            </div>
+                            <p class="text-sm font-black text-yellow-400 drop-shadow-md tracking-widest mt-2">THANK YOU ❤️</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <nav class="lg:hidden fixed bottom-4 left-4 right-4 glass-panel bg-black/70 rounded-2xl z-50 p-2 flex justify-around shadow-[0_20px_50px_rgba(0,0,0,0.9)] border border-white/30 backdrop-blur-xl">
+        <button onclick="switchView('nav')" class="menu-btn nav-active flex flex-col items-center justify-center w-[22%] py-2.5 rounded-xl transition text-white">
+            <span class="text-2xl mb-1 drop-shadow-md">🧭</span><span class="text-[11px] font-bold text-shadow-none">导航</span>
+        </button>
+        <button onclick="switchView('tracking')" class="menu-btn flex flex-col items-center justify-center w-[22%] py-2.5 rounded-xl transition text-gray-400 hover:text-white">
+            <span class="text-2xl mb-1 drop-shadow-md">📅</span><span class="text-[11px] font-bold text-shadow-none">追番</span>
+        </button>
+        <button onclick="switchView('tools')" class="menu-btn flex flex-col items-center justify-center w-[22%] py-2.5 rounded-xl transition text-gray-400 hover:text-white">
+            <span class="text-2xl mb-1 drop-shadow-md">🧰</span><span class="text-[11px] font-bold text-shadow-none">工具</span>
+        </button>
+        <button onclick="switchView('welfare')" class="menu-btn flex flex-col items-center justify-center w-[22%] py-2.5 rounded-xl transition text-pink-300 bg-pink-500/20 border border-pink-400/40 shadow-inner">
+            <span class="text-2xl mb-1 drop-shadow-md">🎁</span><span class="text-[11px] font-bold text-shadow-none">福利</span>
+        </button>
+    </nav>
+
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-black/90 backdrop-blur-md text-white border border-white/30 px-8 py-4 rounded-full text-base font-black shadow-2xl transition-all duration-300 opacity-0 -translate-y-10 z-[999] pointer-events-none text-shadow-none"></div>
+
+    <script>
+        /* ========================================================================================
+        【数据库真·离线引擎：网页 1 秒全开的幕后功臣】
+        
+        为什么这部分代码不会拖慢速度？
+        因为这只是一段“纯文本字符串”。在计算机世界里，几万字的纯文本，体积也才不到 10KB。
+        而一张没压缩的图片是 5000KB！
+        所以，这部分数据库瞬间就会被浏览器解析完毕，然后“藏”进设备的硬盘里。
+        ========================================================================================
+        */
+
+        const RAW_DATA = {
+            sites: [
+                { name: "C站·cilicili", url: "https://www.cilicc.cc/", backup: "https://clicli.com.cn/", cat: "动漫站", desc: "类B站的高清动漫弹幕平台，实时互动。" },
+                { name: "AGE动漫", url: "https://www.agedm.io/", cat: "动漫站", desc: "老牌无广告高清动漫点播，极速秒开。" },
+                { name: "哔哩轻小说", url: "https://www.inovelib.com/", cat: "小说站", desc: "专注日本动漫轻小说，支持离线阅读。" },
+                { name: "66影视网", url: "http://www.66e.cc/", backup: "https://66yingshiwang.com.cn/", cat: "影视站", desc: "综合影视资源下载，含真人影视。" },
+                { name: "咪哩咪哩", url: "http://www.milimili.tv/", cat: "动漫站", desc: "二次元聚合平台，后宫番在线观看。" },
+                { name: "幻天领域", url: "https://www.acgns.org/", backup: "https://www.acgnsq.com/", cat: "综合社区", desc: "ACGN资源分享社区，提供资源下载。" },
+                { name: "omofun", url: "https://www.omofun.icu/", cat: "动漫站", desc: "高清新番直连站，更新快，支持倍速。" },
+                { name: "布谷TV", url: "https://www.bugutv.net/", backup: "https://bugutv.org/", cat: "4K蓝光", desc: "4K电影动漫蓝光原盘下载点播。" },
+                { name: "AGE发布页", url: "https://rentry.la/agefans", cat: "发布页", desc: "实时发布站点最新域名与通知。" },
+                { name: "We动漫网", url: "https://a.webm.org/", cat: "动漫站", desc: "动漫垂直门户，新番预告百科。" },
+                { name: "4K动漫", url: "https://www.agekkkk.com/", cat: "4K蓝光", desc: "4K超高清画质动漫，原画点播。" },
+                { name: "4k影视", url: "https://www.4kvm.org/", cat: "4K蓝光", desc: "综合4K影视平台，含动漫电影。" },
+                { name: "咕咕番", url: "https://www.gugu3.com/", backup: "https://www.gugufan.com/", cat: "动漫站", desc: "日漫专属点播站，日本本土新番。" },
+                { name: "樱花动漫", url: "https://www.yinhuadmc.one/", cat: "动漫站", desc: "超全资源库，日漫国漫欧美大全。" },
+                { name: "Omofun镜像", url: "https://omofun.in/", cat: "动漫站", desc: "omofun镜像站，备用访问通道。" },
+                { name: "MuteFun", url: "https://www.mutean.com/", cat: "动漫站", desc: "无广告平台，主打安静观影体验。" },
+                { name: "girigirilove", url: "https://girigirilove.top/", cat: "综合社区", desc: "二次元资源分享站，漫画游戏合集。" },
+                { name: "Anime1.me", url: "https://anime1.me/", cat: "动漫站", desc: "海外新番资源搬运，更新极其及时。" },
+                { name: "AGE GitHub", url: "https://github.com/agefanscom/website", cat: "工具站", desc: "开源项目技术文档交流参考。" },
+                { name: "蜜柑计划", url: "https://mikanani.kas.pub/", backup: "https://mikanani.me/", cat: "工具站", desc: "动漫字幕制作，无字幕原片下载。" },
+                { name: "爱动漫", url: "https://kisssub.org/", cat: "工具站", desc: "支持动漫剧集批量下载，字幕匹配。" },
+                { name: "蓝光资源站", url: "https://www.jyhcny.com/", backup: "https://www.bdhdtv.com/", cat: "4K蓝光", desc: "无损画质文件下载，适合发烧友。" },
+                { name: "修罗影视", url: "https://as.137.67.83.666/s/dongzuo", cat: "影视站", desc: "动作电影、动漫剧场版专项下载。" },
+                { name: "樱花发布页", url: "https://www.dadslabu.top/", cat: "发布页", desc: "固定域名公告页，解决走失问题。" },
+                { name: "爱壹帆", url: "https://m.lyftv.tv/", backup: "https://www.iyf.lv/", cat: "影视站", desc: "含电视剧电影，多端适配播放流畅。" },
+                { name: "4K动漫CN", url: "https://cn.agekkkk.com/", cat: "4K蓝光", desc: "国内镜像站，极大优化国内访问速度。" },
+                { name: "omofun发布页", url: "https://fb.omoo.tv/", cat: "发布页", desc: "实时推送最新可用域名。" },
+                { name: "MX动漫", url: "https://mxdm.fans/", cat: "动漫站", desc: "资讯与高清动漫在线观看双功能。" },
+                { name: "MX动漫备用", url: "https://www.mxdm.xyz/", cat: "动漫站", desc: "MX动漫备用入口，应对失效。" },
+                { name: "糖吻动漫", url: "https://www.sowu.tv/play?YfhHAAK-1-1.html", cat: "动漫站", desc: "当季热门新番极速更新点播。" },
+                { name: "樱花最新址", url: "https://www.295y.com/", backup: "https://www.imomoe.la/", cat: "发布页", desc: "汇总最新可用官方入口防走失。" },
+                { name: "糖吻备用", url: "https://www.xowm.com/", cat: "动漫站", desc: "糖吻镜像站，确保新番追看不中断。" }
+            ],
+            quotes: [
+                { jp: "諦めたらそこで試合終了ですよ。", cn: "如果放弃的话，比赛就到此结束了。——《灌篮高手》" },
+                { jp: "逃げちゃダメだ、逃げちゃダメだ！", cn: "不能逃避，不能逃避！——《EVA》" },
+                { jp: "俺は海賊王になる男だ！", cn: "我是要成为海贼王的男人！——《海贼王》" },
+                { jp: "心臓を捧げよ！", cn: "献出心脏！——《进击的巨人》" },
+                { jp: "真実はいつもひとつ！", cn: "真相永远只有一个！——《名侦探柯南》" },
+                { jp: "生きろ、そなたは美しい。", cn: "活下去，你很美。——《幽灵公主》" },
+                { jp: "奇跡は諦めない奴の頭上にしか降りて来ない。", cn: "奇迹只会降临在不言放弃的人头上。——《海贼王》" },
+                { jp: "俺のドリルは天を創るドリルだ！", cn: "我的钻头可是突破天际的钻头啊！——《天元突破》" },
+                { jp: "世界は残酷だ、そしてとても美しい。", cn: "这个世界是残酷的，但也非常美丽。——《进击的巨人》" }
+            ],
+            kaomojis: [
+                "(≧∇≦)ﾉ", "(*/ω＼*)", "( •̀ ω •́ )✧", "o(*￣▽￣*)o", "φ(゜▽゜*)♪",
+                "O(∩_∩)O", "(´▽`ʃ♡ƪ)", "[]~(￣▽￣)~*", "(づ￣ 3￣)づ", "(*^▽^*)"
+            ]
+        };
+
+        if (!localStorage.getItem('box_data_initialized')) {
+            localStorage.setItem('db_sites', JSON.stringify(RAW_DATA.sites));
+            localStorage.setItem('db_quotes', JSON.stringify(RAW_DATA.quotes));
+            localStorage.setItem('box_data_initialized', 'true');
+        }
+
+        const LocalDB = {
+            sites: JSON.parse(localStorage.getItem('db_sites') || '[]'),
+            quotes: JSON.parse(localStorage.getItem('db_quotes') || '[]')
+        };
+
+        let state = {
+            animeList: JSON.parse(localStorage.getItem('box_anime_list') || '["鬼灭之刃 无限城篇", "葬送的芙莉莲"]'),
+            currentCat: '全部',
+            isPlaying: false,
+            streakDays: parseInt(localStorage.getItem('box_streak_days') || '0'),
+            lastCheckInDate: localStorage.getItem('box_last_checkin') || ''
+        };
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('nav-active');
+                if(btn.parentElement.tagName === 'NAV' && btn.parentElement.classList.contains('fixed')) {
+                    if(!btn.classList.contains('bg-pink-500/20')) {
+                        btn.classList.remove('text-white'); btn.classList.add('text-gray-400');
+                    }
+                } else {
+                    if(!btn.classList.contains('bg-pink-500/30')) {
+                        btn.classList.remove('text-white'); btn.classList.add('text-gray-200');
+                    }
+                }
+            });
+
+            const activeBtn = event.currentTarget;
+            activeBtn.classList.add('nav-active');
+            activeBtn.classList.remove('text-gray-400', 'text-gray-200');
+            activeBtn.classList.add('text-white');
+        }
+
+        function initNav() {
+            const cats = ['全部', ...new Set(LocalDB.sites.map(s => s.cat))];
+            const filterContainer = document.getElementById('category-filters');
+            cats.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = `cat-btn px-4 py-2 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-bold border border-white/30 transition drop-shadow-md tracking-wider text-shadow-none ${c === '全部' ? 'active' : 'glass-inner text-gray-100 hover:bg-white/30'}`;
+                btn.innerText = c;
+                btn.onclick = () => filterSites(c, btn);
+                filterContainer.appendChild(btn);
+            });
+            renderGrid(LocalDB.sites);
+            
+            if(LocalDB.quotes.length > 0){
+                const randomObj = LocalDB.quotes[Math.floor(Math.random() * LocalDB.quotes.length)];
+                document.getElementById('slogan-jp').innerText = randomObj.jp;
+                document.getElementById('slogan-cn').innerText = randomObj.cn;
+            }
+        }
+
+        function filterSites(cat, btnElement) {
+            state.currentCat = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('active'); b.classList.add('glass-inner', 'text-gray-100');
+            });
+            btnElement.classList.add('active');
+            btnElement.classList.remove('glass-inner', 'text-gray-100');
+            applyFilters(cat, document.getElementById('searchInput').value.toLowerCase());
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            applyFilters(state.currentCat, e.target.value.toLowerCase());
+        });
+
+        function applyFilters(cat, searchTerm) {
+            const filtered = LocalDB.sites.filter(s => {
+                const matchCat = cat === '全部' || s.cat === cat;
+                const matchSearch = s.name.toLowerCase().includes(searchTerm) || s.desc.toLowerCase().includes(searchTerm);
+                return matchCat && matchSearch;
+            });
+            renderGrid(filtered);
+        }
+
+        function renderGrid(data) {
+            const grid = document.getElementById('nav-grid');
+            grid.innerHTML = '';
+            if(data.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 opacity-90 font-bold text-lg md:text-xl">没有找到捏，换个词试试吧~</div>';
+                return;
+            }
+            data.forEach(s => {
+                const firstChar = s.name.charAt(0).toUpperCase();
+                const card = document.createElement('div');
+                card.className = "glass-inner rounded-[2rem] p-5 md:p-6 flex flex-col hover:-translate-y-2 transition duration-300 group shadow-[0_10px_20px_rgba(0,0,0,0.5)] border border-white/20";
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 p-1 shrink-0 shadow-lg flex items-center justify-center font-black text-2xl md:text-3xl text-shadow-none text-white border border-white/40">${firstChar}</div>
+                        <div class="ml-4 overflow-hidden">
+                            <h4 class="font-bold text-sm md:text-lg truncate text-white drop-shadow-md mb-1">${s.name}</h4>
+                            <span class="text-[10px] bg-pink-500/80 text-white px-2.5 py-0.5 rounded-md font-bold shadow-md text-shadow-none border border-white/20">${s.cat}</span>
+                        </div>
+                    </div>
+                    <p class="text-xs md:text-sm text-gray-100 mb-6 line-clamp-2 h-10 flex-grow leading-relaxed font-bold">${s.desc}</p>
+                    <div class="flex gap-3 text-shadow-none">
+                        <a href="${s.url}" target="_blank" class="flex-1 py-2.5 bg-pink-500 hover:bg-pink-400 rounded-xl text-xs md:text-sm font-black text-center shadow-lg transition text-white border border-pink-300/50">直达主站</a>
+                        ${s.backup ? `<a href="${s.backup}" target="_blank" class="flex-[0.8] py-2.5 bg-black/50 rounded-xl text-xs md:text-sm font-bold text-center border border-white/30 hover:bg-white/30 transition text-white">备用</a>` : `<button onclick="copyUrl('${s.url}')" class="flex-[0.8] py-2.5 bg-black/50 rounded-xl text-xs md:text-sm font-bold text-center border border-white/30 hover:bg-white/30 transition text-white">复制</button>`}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bg-audio');
+            audio.volume = 0.4; 
+            const player = document.getElementById('music-player');
+            const status = document.getElementById('music-status');
+            const mobileBtn = document.getElementById('mobile-record');
+            
+            if (state.isPlaying) {
+                audio.pause(); player.classList.remove('playing'); mobileBtn.style.animation = 'none';
+                status.innerText = "已暂停 (点击继续)";
+            } else {
+                audio.play().catch(e => showToast('背景音乐加载失败，请检查网址哦~'));
+                player.classList.add('playing'); mobileBtn.style.animation = 'spin 4s linear infinite';
+                status.innerText = "正在播放...";
+            }
+            state.isPlaying = !state.isPlaying;
+        }
+
+        function checkStreak() {
+            const todayStr = new Date().toDateString();
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            if (state.lastCheckInDate === todayStr) {
+                document.getElementById('pc-checkin').innerText = "✅ 今日已打卡";
+                document.getElementById('pc-checkin').classList.add('opacity-50', 'pointer-events-none');
+            } else if (state.lastCheckInDate !== yesterday.toDateString() && state.lastCheckInDate !== '') {
+                state.streakDays = 0; 
+            }
+            document.getElementById('streak-days').innerText = `连签 ${state.streakDays} 天`;
+        }
+
+        function handleCheckIn() {
+            const todayStr = new Date().toDateString();
+            if (state.lastCheckInDate === todayStr) return;
+            state.streakDays += 1; state.lastCheckInDate = todayStr;
+            localStorage.setItem('box_streak_days', state.streakDays);
+            localStorage.setItem('box_last_checkin', todayStr);
+            checkStreak();
+            showToast(`🎉 打卡成功！你已连续守护二次元 ${state.streakDays} 天！`);
+        }
+
+        function setWelcomeText() {
+            const hour = new Date().getHours();
+            let text = "欢迎回来~";
+            if(hour < 9) text = "早上好，充满干劲的一天！";
+            else if(hour < 14) text = "中午好，记得按时吃饭哦~";
+            else if(hour < 19) text = "下午好，喝杯茶休息一下~";
+            else text = "晚上好，准备好补番了吗？";
+            document.getElementById('welcome-text').innerText = text;
+        }
+
+        function renderAnimeList() {
+            const listObj = document.getElementById('my-anime-list');
+            listObj.innerHTML = '';
+            state.animeList.forEach((anime, index) => {
+                const el = document.createElement('div');
+                el.className = "glass-inner px-5 py-5 rounded-2xl flex justify-between items-center group transition hover:bg-black/60 border border-white/20 shadow-lg";
+                el.innerHTML = `
+                    <span class="font-bold text-base truncate pr-2 text-white drop-shadow-md">${anime}</span>
+                    <button onclick="removeAnime(${index})" class="text-pink-400 opacity-0 group-hover:opacity-100 transition text-sm font-black hover:scale-110 bg-black/80 px-4 py-2 rounded-xl text-shadow-none shadow-md border border-pink-400/50">移除</button>
+                `;
+                listObj.appendChild(el);
+            });
+        }
+
+        function addAnime() {
+            const input = document.getElementById('new-anime-input');
+            const val = input.value.trim();
+            if(!val) return;
+            if(state.animeList.includes(val)) { showToast("列表里已经有这部番啦！"); return; }
+            state.animeList.push(val);
+            localStorage.setItem('box_anime_list', JSON.stringify(state.animeList));
+            input.value = ''; renderAnimeList(); showToast("✅ 成功添加到追番清单！");
+        }
+
+        function removeAnime(index) {
+            state.animeList.splice(index, 1);
+            localStorage.setItem('box_anime_list', JSON.stringify(state.animeList));
+            renderAnimeList();
+        }
+
+        function renderKaomojis() {
+            const container = document.getElementById('kaomoji-grid');
+            RAW_DATA.kaomojis.forEach(k => {
+                const btn = document.createElement('button');
+                btn.className = "glass-inner py-4 font-bold text-base hover:bg-white/30 transition rounded-2xl text-shadow-none text-white border border-white/20 shadow-md";
+                btn.innerText = k;
+                btn.onclick = () => copyUrl(k, true);
+                container.appendChild(btn);
+            });
+        }
+
+        function initDiary() {
+            const diary = document.getElementById('local-diary');
+            diary.value = localStorage.getItem('box_diary') || '';
+            diary.addEventListener('input', (e) => localStorage.setItem('box_diary', e.target.value));
+        }
+
+        function copyUrl(text, isKaomoji = false) {
+            const el = document.createElement('textarea');
+            el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            if(isKaomoji) showToast(`✨ 颜文字 ${text} 已复制，快去卖萌吧！`);
+            else showToast("📋 网址已复制到剪贴板！可以直接发给好基友了！");
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.classList.remove('opacity-0', '-translate-y-10');
+            setTimeout(() => t.classList.add('opacity-0', '-translate-y-10'), 2500);
+        }
+
+        window.onload = () => {
+            initNav();
+            renderAnimeList();
+            setWelcomeText();
+            checkStreak();
+            renderKaomojis();
+            initDiary();
+        };
+
+    </script>
+</body>
+</html>
